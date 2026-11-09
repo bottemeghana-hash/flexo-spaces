@@ -1,0 +1,216 @@
+
+.register-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  color: white;
+  font-family: "DM Sans", sans-serif;
+  background:
+    url("https://images.unsplash.com/photo-1497366754035-f200968a6e72")
+    center / cover fixed no-repeat;
+}
+
+.register-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.82),
+    rgba(0, 0, 0, 0.42)
+  );
+}
+
+.register-header,
+.register-content,
+.register-footer {
+  position: relative;
+  z-index: 1;
+}
+
+.register-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30px 6%;
+}
+
+.register-logo {
+  color: #c5a15a;
+  font-family: "Playfair Display", serif;
+  font-size: 25px;
+  letter-spacing: 3px;
+  text-decoration: none;
+}
+
+.register-header span,
+.register-footer {
+  color: #e4d5b7;
+  font-size: 10px;
+  letter-spacing: 2px;
+}
+
+.register-content {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 45px;
+  padding: 40px 8%;
+}
+
+.register-message {
+  max-width: 500px;
+}
+
+.register-message p,
+.register-eyebrow {
+  color: #c5a15a;
+  font-size: 11px;
+  letter-spacing: 3px;
+  font-weight: bold;
+}
+
+.register-message h1 {
+  font-family: "Playfair Display", serif;
+  font-size: clamp(42px, 5vw, 68px);
+  font-weight: 400;
+  line-height: 1.15;
+}
+
+.register-message span {
+  color: #e6e0d5;
+  line-height: 1.8;
+}
+
+.register-card {
+  width: 100%;
+  max-width: 430px;
+  box-sizing: border-box;
+  padding: 35px;
+  margin: 20px 0;
+  border-radius: 8px;
+  background: #f2ebdd;
+  color: #171717;
+  box-shadow: 0 20px 70px rgba(0, 0, 0, 0.35);
+}
+
+.register-card h2 {
+  font-family: "Playfair Display", serif;
+  font-size: 38px;
+  font-weight: 400;
+  margin: 10px 0;
+}
+
+.register-subtitle {
+  color: #716a5f;
+  font-size: 13px;
+  margin-bottom: 20px;
+}
+
+.register-card form {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.register-card form label {
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 7px;
+}
+
+.register-card input,
+.register-card select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 13px;
+  background: #fffdf8;
+  border: 1px solid #d8cfbf;
+  outline: none;
+  font: inherit;
+  font-size: 13px;
+}
+
+.register-card input:focus,
+.register-card select:focus {
+  border-color: #c5a15a;
+}
+
+.register-password-box {
+  position: relative;
+}
+
+.register-password-box button {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: transparent;
+  color: #92723d;
+  cursor: pointer;
+}
+
+.register-submit {
+  margin-top: 18px;
+  padding: 16px;
+  background: #171717;
+  color: #c5a15a;
+  border: 1px solid #171717;
+  font-weight: bold;
+  letter-spacing: 2px;
+  cursor: pointer;
+}
+
+.register-submit:hover {
+  background: #c5a15a;
+  color: #171717;
+}
+
+.register-login-text {
+  text-align: center;
+  color: #716a5f;
+  font-size: 12px;
+  margin-top: 22px;
+}
+
+.register-login-text a {
+  color: #92723d;
+  font-weight: bold;
+}
+
+.register-home-link {
+  display: block;
+  text-align: center;
+  margin-top: 18px;
+  color: #716a5f;
+  font-size: 12px;
+  text-decoration: none;
+}
+
+.register-footer {
+  padding: 20px;
+  text-align: center;
+}
+
+@media (max-width: 850px) {
+  .register-content {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 25px 7%;
+  }
+
+  .register-message h1 {
+    font-size: 45px;
+  }
+
+  .register-card {
+    max-width: 100%;
+  }
+
+  .register-header span {
+    display: none;
+  }
+}
