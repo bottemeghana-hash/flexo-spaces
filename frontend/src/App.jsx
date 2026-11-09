@@ -220,7 +220,16 @@ function Home() {
           <a href="#contact">Contact</a>
         </div>
 
-        <div className="nav-actions">
+        <div
+          className="nav-actions"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "10px",
+            flexWrap: "wrap",
+          }}
+        >
 
           <Link to="/login" className="login-btn">
             Log In
@@ -232,6 +241,30 @@ function Home() {
 
           <Link to="/register" className="nav-cta">
             List Your Space ↗
+          </Link>
+
+          {/* ADMIN DASHBOARD BUTTON */}
+
+          <Link
+            to="/admin-login"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "11px 17px",
+              backgroundColor: "#C5A15A",
+              color: "#191918",
+              border: "1px solid #C5A15A",
+              borderRadius: "6px",
+              textDecoration: "none",
+              fontWeight: "700",
+              fontSize: "13px",
+              whiteSpace: "nowrap",
+              cursor: "pointer",
+              transition: "all 0.3s ease",
+            }}
+          >
+            Admin Dashboard ↗
           </Link>
 
         </div>
@@ -554,6 +587,10 @@ function App() {
           )
         }
       />
+
+      {/* REDIRECT UNKNOWN ROUTES TO HOMEPAGE */}
+
+      <Route path="*" element={<Navigate to="/" replace />} />
 
     </Routes>
   );
