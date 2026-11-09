@@ -1,67 +1,53 @@
 
+require("dotenv").config();
+
 const express = require("express");
-const router = express.Router();
+const mongoose = require("mongoose");
+const cors = require("cors");
 
-const Booking = require("../models/Booking");
+const bookingRoutes = require("./routes/bookingRoutes");
+const adminRoutes = require("./routes/adminRoutes");
 
-// CREATE BOOKING
-router.post("/", async (req, res) => {
-  try {
-    const {
-      customerName,
-      email,
-      phone,
-      workspaceId,
-      workspaceName,
-      location,
-      bookingDate,
-      bookingTime,
-      people,
-    } = req.body;
+const app = express();
 
-    const booking = await Booking.create({
-      customerName,
-      email,
-      phone,
-      workspaceId,
-      workspaceName,
-      location,
-      bookingDate,
-      bookingTime,
-      people,
-    });
+app.use(cors());
+app.use(express.json());
 
-    res.status(201).json({
-      success: true,
-      message: "Booking request submitted successfully!",
-      booking,
-    });
-  } catch (error) {
-    res.status(400).json({
-      success: false,
-      message: error.message,
-    });
-  }
+// Health check
+app.get("/api/health", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "Flexo Spaces backend is running",
+    database:
+      mongoose.connection.readyState === 1 ? "Connected" : "Not connected",
+  });
 });
 
-// GET ALL BOOKINGS
-router.get("/", async (req, res) => {
-  try {
-    const bookings = await Booking.find().sort({
-      createdAt: -1,
-    });
+// Admin login API
+app.use("/api/admin", adminRoutes);
 
-    res.status(200).json({
-      success: true,
-      count: bookings.length,
-      bookings,
+// Booking APIs
+app.use("/api/bookings", bookingRoutes);
+
+const PORT = process.env.PORT || 5000;
+
+const startServer = async () => {
+  try {
+    if (!process.env.MONGODB_URI) {
+      throw new Error("MONGODB_URI is missing from backend .env");
+    }
+
+    await mongoose.connect(process.env.MONGODB_URI);
+
+    console.log("MongoDB connected successfully");
+
+    app.listen(PORT, () => {
+      console.log(`Flexo Spaces backend running on port ${PORT}`);
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    console.error("Backend startup failed:", error.message);
+    process.exit(1);
   }
-});
+};
 
-module.exports = router;
+startServer();

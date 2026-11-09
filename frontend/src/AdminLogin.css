@@ -1,0 +1,130 @@
+
+.admin-login-page {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 25px;
+  background: #191918;
+  font-family: "DM Sans", sans-serif;
+}
+
+.admin-login-card {
+  width: 100%;
+  max-width: 440px;
+  padding: 48px 40px;
+  background: #f5f1e9;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.admin-login-brand {
+  font-size: 25px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  color: #191918;
+}
+
+.admin-login-brand span {
+  color: #c5a15a;
+}
+
+.admin-login-label {
+  margin-top: 45px;
+  color: #a18449;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 3px;
+}
+
+.admin-login-card h1 {
+  margin: 12px 0;
+  color: #191918;
+  font-family: "Playfair Display", serif;
+  font-size: 36px;
+}
+
+.admin-login-description {
+  color: #77736b;
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 30px;
+}
+
+.admin-login-card form {
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-login-card label {
+  margin: 15px 0 8px;
+  color: #292824;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.admin-login-card input {
+  width: 100%;
+  padding: 14px;
+  border: 1px solid #d8d1c5;
+  border-radius: 5px;
+  background: #fff;
+  color: #191918;
+  font-size: 14px;
+  outline: none;
+}
+
+.admin-login-card input:focus {
+  border-color: #c5a15a;
+}
+
+.admin-login-card button {
+  margin-top: 28px;
+  padding: 15px;
+  border: none;
+  border-radius: 5px;
+  background: #191918;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.admin-login-card button:hover {
+  background: #a18449;
+}
+
+.admin-login-card button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.admin-login-error {
+  margin-top: 15px;
+  color: #b42318;
+  font-size: 13px;
+}
+
+.admin-login-back {
+  display: block;
+  margin-top: 28px;
+  color: #77736b;
+  font-size: 13px;
+  text-align: center;
+  text-decoration: none;
+}
+
+.admin-login-back:hover {
+  color: #a18449;
+}
+
+@media (max-width: 480px) {
+  .admin-login-card {
+    padding: 35px 24px;
+  }
+
+  .admin-login-card h1 {
+    font-size: 30px;
+  }
+}

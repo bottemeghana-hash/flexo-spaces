@@ -335,3 +335,171 @@ html {
     font-size: 30px;
   }
 }
+
+/* ==================================
+   MY BOOKINGS - DYNAMIC DASHBOARD
+================================== */
+
+.bookings-loading,
+.bookings-error,
+.dashboard-empty {
+  padding: 35px 20px;
+  text-align: center;
+  background: #faf8f3;
+  border: 1px solid #e8e0d4;
+  margin-top: 15px;
+}
+
+.bookings-loading {
+  color: #8b7040;
+  font-size: 14px;
+}
+
+.bookings-error {
+  color: #a33b32;
+}
+
+.bookings-error p {
+  margin-bottom: 15px;
+}
+
+.booking-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.booking-card {
+  background: #faf8f3;
+  border: 1px solid #e8e0d4;
+  padding: 24px;
+  transition: 0.3s ease;
+  min-width: 0;
+}
+
+.booking-card:hover {
+  border-color: #c5a15a;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 22px rgba(25, 25, 24, 0.06);
+}
+
+.booking-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.booking-card-header h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 21px;
+  font-weight: 500;
+  margin: 0 0 7px;
+}
+
+.booking-card-header p {
+  color: #888;
+  font-size: 13px;
+  margin: 0;
+}
+
+.booking-status {
+  display: inline-block;
+  padding: 7px 12px;
+  border-radius: 30px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.booking-status.pending {
+  background: #fff0ce;
+  color: #94691e;
+}
+
+.booking-status.approved {
+  background: #dff3e4;
+  color: #287443;
+}
+
+.booking-status.rejected,
+.booking-status.cancelled {
+  background: #f8e1df;
+  color: #a33b32;
+}
+
+.booking-details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 17px;
+  padding-top: 18px;
+  border-top: 1px solid #e8e0d4;
+}
+
+.booking-detail p {
+  color: #999;
+  font-size: 11px;
+  margin: 0 0 6px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.booking-detail h4 {
+  color: #25231f;
+  font-size: 13px;
+  font-weight: 600;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.booking-reference {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid #e8e0d4;
+  color: #999;
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+
+.booking-reference strong {
+  color: #8b7040;
+}
+
+.dashboard-retry {
+  padding: 11px 20px;
+  background: #191918;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  transition: 0.3s;
+}
+
+.dashboard-retry:hover {
+  background: #c5a15a;
+  color: #191918;
+}
+
+/* BOOKING RESPONSIVE DESIGN */
+
+@media (max-width: 900px) {
+  .booking-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 650px) {
+  .booking-card {
+    padding: 18px;
+  }
+
+  .booking-card-header {
+    flex-direction: column;
+  }
+
+  .booking-details {
+    gap: 14px;
+  }
+}

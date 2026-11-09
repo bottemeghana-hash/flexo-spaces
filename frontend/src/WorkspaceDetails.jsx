@@ -13,6 +13,8 @@ function WorkspaceDetails({ space, onBack }) {
 
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const [bookingReference, setBookingReference] = useState("");
+  const [bookingLoading, setBookingLoading] = useState(false);
+  const [bookingError, setBookingError] = useState("");
 
   if (!space) return null;
 
@@ -25,14 +27,71 @@ function WorkspaceDetails({ space, onBack }) {
     }));
   };
 
-  const handleBooking = (event) => {
+  const handleBooking = async (event) => {
     event.preventDefault();
 
-    const reference =
-      "FLX" + Date.now().toString().slice(-8);
+    setBookingLoading(true);
+    setBookingError("");
 
-    setBookingReference(reference);
-    setBookingSuccess(true);
+    try {
+      const response = await fetch(
+        "http://localhost:5000/api/bookings",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            customerName: formData.customerName,
+            email: formData.email,
+            phone: formData.phone,
+            workspaceId: String(space.id),
+            workspaceName: space.name,
+            location: space.location,
+            bookingDate: formData.bookingDate,
+            bookingTime: formData.bookingTime,
+            people: Number(formData.people),
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Booking submission failed.");
+      }
+
+      if (!data.booking || !data.booking._id) {
+        throw new Error("Booking was received, but no reference ID was returned.");
+      }
+
+      setBookingReference(data.booking._id);
+      setBookingSuccess(true);
+    } catch (error) {
+      console.error("Booking error:", error);
+
+      setBookingError(
+        error.message ||
+          "Unable to submit your booking. Please try again."
+      );
+    } finally {
+      setBookingLoading(false);
+    }
+  };
+
+  const handleAnotherRequest = () => {
+    setBookingSuccess(false);
+    setBookingReference("");
+    setBookingError("");
+
+    setFormData({
+      customerName: "",
+      email: "",
+      phone: "",
+      bookingDate: "",
+      bookingTime: "",
+      people: "1",
+    });
   };
 
   return (
@@ -92,12 +151,11 @@ function WorkspaceDetails({ space, onBack }) {
               <h2>Request Received!</h2>
 
               <p>
-                Your booking request has been submitted
-                successfully.
+                Your booking request has been saved successfully.
               </p>
 
               <p>
-                <strong>Reference:</strong>
+                <strong>Booking Reference:</strong>
                 <br />
                 {bookingReference}
               </p>
@@ -115,13 +173,14 @@ function WorkspaceDetails({ space, onBack }) {
               </p>
 
               <p>
-                This is a demo confirmation. Your booking
-                is not yet saved or confirmed.
+                <strong>Status:</strong>
+                <br />
+                Pending owner confirmation
               </p>
 
               <button
                 className="booking-button"
-                onClick={() => setBookingSuccess(false)}
+                onClick={handleAnotherRequest}
               >
                 Make Another Request
               </button>
@@ -199,11 +258,26 @@ function WorkspaceDetails({ space, onBack }) {
                   required
                 />
 
+                {bookingError && (
+                  <p
+                    role="alert"
+                    style={{
+                      color: "red",
+                      marginTop: "10px",
+                    }}
+                  >
+                    {bookingError}
+                  </p>
+                )}
+
                 <button
                   type="submit"
                   className="booking-button"
+                  disabled={bookingLoading}
                 >
-                  Submit Booking Request
+                  {bookingLoading
+                    ? "Submitting Request..."
+                    : "Submit Booking Request"}
                 </button>
               </form>
 
@@ -220,3 +294,4 @@ function WorkspaceDetails({ space, onBack }) {
 }
 
 export default WorkspaceDetails;
+

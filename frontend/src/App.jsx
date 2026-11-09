@@ -1,11 +1,18 @@
 
 import { useState } from "react";
-import { Routes, Route, Link } from "react-router-dom";
+import {
+  Routes,
+  Route,
+  Link,
+  Navigate,
+} from "react-router-dom";
 
 import Login from "./pages/login";
 import Register from "./pages/Register";
 import WorkspaceDetails from "./WorkspaceDetails";
 import UserDashboard from "./UserDashboard";
+import AdminDashboard from "./AdminDashboard";
+import AdminLogin from "./AdminLogin";
 
 import "./App.css";
 
@@ -165,7 +172,7 @@ function Home() {
     return matchesLocation && matchesType && matchesBudget;
   });
 
-  // SEARCH
+  // SEARCH WORKSPACES
 
   const handleSearch = () => {
     setSearchApplied(true);
@@ -207,33 +214,33 @@ function Home() {
         </a>
 
         <div className="nav-links">
-    <a href="#home">Home</a>
-    <a href="#spaces">Explore Spaces</a>
-    <a href="#about">About Us</a>
-    <a href="#contact">Contact</a>
-  </div>
+          <a href="#home">Home</a>
+          <a href="#spaces">Explore Spaces</a>
+          <a href="#about">About Us</a>
+          <a href="#contact">Contact</a>
+        </div>
 
-  <div className="nav-actions">
+        <div className="nav-actions">
 
-    <Link to="/login" className="login-btn">
-      Log In
-    </Link>
+          <Link to="/login" className="login-btn">
+            Log In
+          </Link>
 
-    <Link to="/dashboard" className="login-btn">
-      Dashboard
-    </Link>
+          <Link to="/dashboard" className="login-btn">
+            Dashboard
+          </Link>
 
-    <Link to="/register" className="nav-cta">
-      List Your Space ↗
-    </Link>
+          <Link to="/register" className="nav-cta">
+            List Your Space ↗
+          </Link>
 
-  </div>
-  
+        </div>
+
       </nav>
 
       <main>
 
-        {/* HERO */}
+        {/* HERO SECTION */}
 
         <section className="hero" id="home">
 
@@ -474,7 +481,7 @@ function Home() {
 
         </section>
 
-        {/* ABOUT */}
+        {/* ABOUT SECTION */}
 
         <section className="about-section" id="about">
 
@@ -512,6 +519,7 @@ function Home() {
         </footer>
 
       </main>
+
     </div>
   );
 }
@@ -531,6 +539,21 @@ function App() {
       <Route path="/register" element={<Register />} />
 
       <Route path="/dashboard" element={<UserDashboard />} />
+
+      <Route path="/admin-login" element={<AdminLogin />} />
+
+      {/* PROTECTED ADMIN ROUTE */}
+
+      <Route
+        path="/admin"
+        element={
+          localStorage.getItem("flexoAdminToken") ? (
+            <AdminDashboard />
+          ) : (
+            <Navigate to="/admin-login" replace />
+          )
+        }
+      />
 
     </Routes>
   );
