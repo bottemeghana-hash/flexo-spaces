@@ -41,11 +41,7 @@ function AdminLogin() {
         );
       }
 
-      localStorage.setItem(
-        "flexoAdminToken",
-        data.token
-      );
-
+      localStorage.setItem("flexoAdminToken", data.token);
       localStorage.setItem(
         "flexoAdminEmail",
         data.admin?.email || email
@@ -53,13 +49,12 @@ function AdminLogin() {
 
       navigate("/admin", { replace: true });
 
-    } catch (error) {
-      console.error("Admin login error:", error);
+    } catch (err) {
+      console.error("Admin login error:", err);
 
       setError(
-        error.message || "Unable to connect to the backend."
+        err.message || "Unable to connect to the backend."
       );
-
     } finally {
       setLoading(false);
     }
@@ -84,7 +79,6 @@ function AdminLogin() {
         </p>
 
         <form onSubmit={handleLogin}>
-
           <label htmlFor="admin-email">
             Email address
           </label>
@@ -94,7 +88,7 @@ function AdminLogin() {
             type="email"
             placeholder="Enter admin email"
             value={email}
-            onChange={(event) => setEmail(event.target.value)}
+            onChange={(e) => setEmail(e.target.value)}
             required
           />
 
@@ -107,7 +101,7 @@ function AdminLogin() {
             type="password"
             placeholder="Enter admin password"
             value={password}
-            onChange={(event) => setPassword(event.target.value)}
+            onChange={(e) => setPassword(e.target.value)}
             required
           />
 
@@ -118,11 +112,8 @@ function AdminLogin() {
           )}
 
           <button type="submit" disabled={loading}>
-            {loading
-              ? "Signing in..."
-              : "Sign in to dashboard"}
+            {loading ? "Signing in..." : "Sign in to dashboard"}
           </button>
-
         </form>
 
         <Link to="/" className="admin-login-back">
