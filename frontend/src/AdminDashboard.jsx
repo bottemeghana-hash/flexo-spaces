@@ -1,9 +1,10 @@
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "./api";
 import "./AdminDashboard.css";
 
-const API_URL = "http://127.0.0.1:5000/api/bookings";
+const API_URL = `${API_BASE_URL}/api/bookings`;
 
 function AdminDashboard() {
   const navigate = useNavigate();
@@ -19,33 +20,26 @@ function AdminDashboard() {
     return localStorage.getItem("flexoAdminToken");
   };
 
-  // HANDLE EXPIRED OR INVALID LOGIN
-  const handleUnauthorized = () => {
-    localStorage.removeItem("flexoAdminToken");
-    localStorage.removeItem("flexoAdminEmail");
-    navigate("/admin-login", { replace: true });
-  };
-
-  // ADMIN LOGOUT
-  const handleLogout = () => {
+  // LOGOUT OR HANDLE EXPIRED TOKEN
+  const logout = () => {
     localStorage.removeItem("flexoAdminToken");
     localStorage.removeItem("flexoAdminEmail");
     navigate("/admin-login", { replace: true });
   };
 
   // LOAD BOOKINGS FROM MONGODB
-  const loadBookings = async () => {
+  const loadBookings = useCallback(async () => {
     const token = getToken();
 
     if (!token) {
-      handleUnauthorized();
+      logout();
       return;
     }
 
-    try {
-      setLoading(true);
-      setError("");
+    setLoading(true);
+    setError("");
 
+    try {
       const response = await fetch(API_URL, {
         method: "GET",
         headers: {
@@ -54,7 +48,7 @@ function AdminDashboard() {
       });
 
       if (response.status === 401 || response.status === 403) {
-        handleUnauthorized();
+        logout();
         return;
       }
 
@@ -64,31 +58,36 @@ function AdminDashboard() {
         throw new Error(data.message || "Unable to load bookings.");
       }
 
-      setBookings(data.bookings || []);
+      setBookings(
+        Array.isArray(data.bookings) ? data.bookings : []
+      );
     } catch (err) {
-      setError(err.message || "Something went wrong.");
+      setError(
+        err.message || "Unable to connect to the backend."
+      );
     } finally {
       setLoading(false);
     }
-  };
+  }, [navigate]);
 
+  // LOAD BOOKINGS WHEN PAGE OPENS
   useEffect(() => {
     loadBookings();
-  }, []);
+  }, [loadBookings]);
 
   // UPDATE BOOKING STATUS
   const updateStatus = async (bookingId, status) => {
     const token = getToken();
 
     if (!token) {
-      handleUnauthorized();
+      logout();
       return;
     }
 
-    try {
-      setUpdatingId(bookingId);
-      setError("");
+    setUpdatingId(bookingId);
+    setError("");
 
+    try {
       const response = await fetch(
         `${API_URL}/${bookingId}/status`,
         {
@@ -102,23 +101,23 @@ function AdminDashboard() {
       );
 
       if (response.status === 401 || response.status === 403) {
-        handleUnauthorized();
+        logout();
         return;
       }
 
       const data = await response.json();
 
       if (!response.ok || !data.success) {
-        throw new Error(data.message || "Could not update booking.");
+        throw new Error(data.message || "Booking update failed.");
       }
 
-      setBookings((previousBookings) =>
-        previousBookings.map((booking) =>
+      setBookings((previous) =>
+        previous.map((booking) =>
           booking._id === bookingId ? data.booking : booking
         )
       );
     } catch (err) {
-      setError(err.message || "Status update failed.");
+      setError(err.message || "Unable to update booking.");
     } finally {
       setUpdatingId("");
     }
@@ -150,7 +149,7 @@ function AdminDashboard() {
     );
   }, [bookings, activeFilter]);
 
-  // FORMAT DATE
+  // FORMAT BOOKING DATE
   const formatDate = (dateValue) => {
     if (!dateValue) return "Not specified";
 
@@ -167,7 +166,7 @@ function AdminDashboard() {
     });
   };
 
-  // FORMAT TIME
+  // FORMAT BOOKING TIME
   const formatTime = (time) => {
     if (!time) return "Not specified";
 
@@ -177,7 +176,10 @@ function AdminDashboard() {
 
     const [hours, minutes] = time.split(":").map(Number);
 
-    if (Number.isNaN(hours) || Number.isNaN(minutes)) {
+    if (
+      Number.isNaN(hours) ||
+      Number.isNaN(minutes)
+    ) {
       return time;
     }
 
@@ -191,10 +193,12 @@ function AdminDashboard() {
     });
   };
 
+  // ADMIN DASHBOARD UI
   return (
     <div className="admin-dashboard">
 
       {/* SIDEBAR */}
+
       <aside className="admin-sidebar">
 
         <Link to="/" className="admin-logo">
@@ -207,20 +211,25 @@ function AdminDashboard() {
 
         <nav className="admin-nav">
           <a href="#admin-overview" className="admin-nav-active">
-            <span>▦</span> Overview
+            <span>▦</span>
+            Overview
           </a>
 
           <a href="#admin-bookings">
-            <span>▤</span> Manage Bookings
+            <span>▤</span>
+            Manage Bookings
           </a>
         </nav>
 
         <div className="admin-sidebar-bottom">
-          <Link to="/">← Back to Website</Link>
+
+          <Link to="/">
+            ← Back to Website
+          </Link>
 
           <button
             type="button"
-            onClick={handleLogout}
+            onClick={logout}
             style={{
               background: "none",
               border: "none",
@@ -233,14 +242,17 @@ function AdminDashboard() {
           >
             Log Out
           </button>
+
         </div>
 
       </aside>
 
-      {/* MAIN CONTENT */}
+      {/* MAIN DASHBOARD */}
+
       <main className="admin-main">
 
         {/* HEADER */}
+
         <header className="admin-header">
 
           <div>
@@ -257,26 +269,32 @@ function AdminDashboard() {
 
           <button
             className="admin-refresh-btn"
+            type="button"
             onClick={loadBookings}
             disabled={loading}
           >
-            ↻ Refresh Bookings
+            {loading ? "Loading..." : "↻ Refresh Bookings"}
           </button>
 
         </header>
 
         {/* ERROR MESSAGE */}
+
         {error && (
-          <div className="admin-error">
+          <div className="admin-error" role="alert">
             <p>{error}</p>
 
-            <button onClick={loadBookings}>
+            <button
+              type="button"
+              onClick={loadBookings}
+            >
               Try Again
             </button>
           </div>
         )}
 
-        {/* STATISTICS */}
+        {/* BOOKING OVERVIEW */}
+
         <section
           className="admin-overview"
           id="admin-overview"
@@ -319,9 +337,11 @@ function AdminDashboard() {
             </article>
 
           </div>
+
         </section>
 
-        {/* BOOKING MANAGEMENT */}
+        {/* RESERVATION MANAGEMENT */}
+
         <section
           className="admin-bookings-section"
           id="admin-bookings"
@@ -343,7 +363,8 @@ function AdminDashboard() {
 
           </div>
 
-          {/* FILTER BUTTONS */}
+          {/* BOOKING FILTERS */}
+
           <div className="admin-filters">
 
             {[
@@ -356,6 +377,7 @@ function AdminDashboard() {
 
               <button
                 key={filter}
+                type="button"
                 className={
                   activeFilter === filter
                     ? "admin-filter active"
@@ -370,7 +392,8 @@ function AdminDashboard() {
 
           </div>
 
-          {/* BOOKING LIST */}
+          {/* BOOKING RESULTS */}
+
           {loading ? (
 
             <div className="admin-empty-state">
@@ -381,7 +404,10 @@ function AdminDashboard() {
 
             <div className="admin-empty-state">
               <h3>No bookings found</h3>
-              <p>There are no bookings in this category yet.</p>
+
+              <p>
+                There are no bookings in this category yet.
+              </p>
             </div>
 
           ) : (
@@ -395,6 +421,8 @@ function AdminDashboard() {
                   key={booking._id}
                 >
 
+                  {/* WORKSPACE DETAILS */}
+
                   <div className="admin-booking-top">
 
                     <div>
@@ -402,38 +430,46 @@ function AdminDashboard() {
                         WORKSPACE
                       </p>
 
-                      <h3>{booking.workspaceName}</h3>
+                      <h3>
+                        {booking.workspaceName || "Workspace"}
+                      </h3>
 
                       <p className="admin-booking-location">
-                        {booking.location}
+                        {booking.location || "Location not specified"}
                       </p>
                     </div>
 
                     <span
-                      className={`admin-status ${(
-                        booking.status || "Pending"
-                      ).toLowerCase()}`}
+                      className={`admin-status ${(booking.status || "Pending").toLowerCase()}`}
                     >
                       {booking.status || "Pending"}
                     </span>
 
                   </div>
 
+                  {/* CUSTOMER INFORMATION */}
+
                   <div className="admin-booking-details">
 
                     <div>
                       <span>Customer</span>
-                      <strong>{booking.customerName}</strong>
+                      <strong>
+                        {booking.customerName || "Not available"}
+                      </strong>
                     </div>
 
                     <div>
                       <span>Email</span>
-                      <strong>{booking.email}</strong>
+                      <strong>
+                        {booking.email || "Not available"}
+                      </strong>
                     </div>
 
                     <div>
                       <span>Phone</span>
-                      <strong>{booking.phone}</strong>
+                      <strong>
+                        {booking.phone || "Not available"}
+                      </strong>
                     </div>
 
                     <div>
@@ -452,10 +488,14 @@ function AdminDashboard() {
 
                     <div>
                       <span>People</span>
-                      <strong>{booking.people}</strong>
+                      <strong>
+                        {booking.people ?? "Not specified"}
+                      </strong>
                     </div>
 
                   </div>
+
+                  {/* BOOKING ID AND ACTIONS */}
 
                   <div className="admin-booking-footer">
 
@@ -469,6 +509,7 @@ function AdminDashboard() {
                       <div className="admin-booking-actions">
 
                         <button
+                          type="button"
                           className="admin-approve-btn"
                           onClick={() =>
                             updateStatus(booking._id, "Approved")
@@ -481,6 +522,7 @@ function AdminDashboard() {
                         </button>
 
                         <button
+                          type="button"
                           className="admin-reject-btn"
                           onClick={() =>
                             updateStatus(booking._id, "Rejected")
@@ -499,6 +541,7 @@ function AdminDashboard() {
                       <div className="admin-booking-actions">
 
                         <button
+                          type="button"
                           className="admin-reject-btn"
                           onClick={() =>
                             updateStatus(booking._id, "Cancelled")
@@ -532,11 +575,14 @@ function AdminDashboard() {
 
         </section>
 
+        {/* FOOTER */}
+
         <footer className="admin-footer">
           © 2026 Flexo Spaces. Admin Management Panel.
         </footer>
 
       </main>
+
     </div>
   );
 }

@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { API_BASE_URL } from "./api";
 
 function WorkspaceDetails({ space, onBack }) {
   const [formData, setFormData] = useState({
@@ -18,6 +19,7 @@ function WorkspaceDetails({ space, onBack }) {
 
   if (!space) return null;
 
+  // HANDLE FORM INPUTS
   const handleChange = (event) => {
     const { name, value } = event.target;
 
@@ -27,6 +29,7 @@ function WorkspaceDetails({ space, onBack }) {
     }));
   };
 
+  // SUBMIT BOOKING TO MONGODB
   const handleBooking = async (event) => {
     event.preventDefault();
 
@@ -35,15 +38,15 @@ function WorkspaceDetails({ space, onBack }) {
 
     try {
       const response = await fetch(
-        "http://localhost:5000/api/bookings",
+        `${API_BASE_URL}/api/bookings`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            customerName: formData.customerName,
-            email: formData.email,
+            customerName: formData.customerName.trim(),
+            email: formData.email.trim(),
             phone: formData.phone,
             workspaceId: String(space.id),
             workspaceName: space.name,
@@ -57,28 +60,35 @@ function WorkspaceDetails({ space, onBack }) {
 
       const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data.message || "Booking submission failed.");
+      if (!response.ok || !data.success) {
+        throw new Error(
+          data.message || "Booking submission failed."
+        );
       }
 
       if (!data.booking || !data.booking._id) {
-        throw new Error("Booking was received, but no reference ID was returned.");
+        throw new Error(
+          "Booking was received, but no reference ID was returned."
+        );
       }
 
       setBookingReference(data.booking._id);
       setBookingSuccess(true);
+
     } catch (error) {
       console.error("Booking error:", error);
 
       setBookingError(
         error.message ||
-          "Unable to submit your booking. Please try again."
+        "Unable to submit your booking. Please try again."
       );
+
     } finally {
       setBookingLoading(false);
     }
   };
 
+  // CREATE ANOTHER BOOKING REQUEST
   const handleAnotherRequest = () => {
     setBookingSuccess(false);
     setBookingReference("");
@@ -96,18 +106,41 @@ function WorkspaceDetails({ space, onBack }) {
 
   return (
     <main className="workspace-details-page">
-      <button className="back-button" onClick={onBack}>
+
+      {/* BACK BUTTON */}
+
+      <button
+        className="back-button"
+        type="button"
+        onClick={onBack}
+      >
         ← Back to Workspaces
       </button>
 
+      {/* WORKSPACE IMAGE */}
+
       <div className="details-image">
-        <img src={space.image} alt={space.name} />
-        <span className="details-type">{space.type}</span>
+
+        <img
+          src={space.image}
+          alt={space.name}
+        />
+
+        <span className="details-type">
+          {space.type}
+        </span>
+
       </div>
 
+      {/* WORKSPACE INFORMATION */}
+
       <div className="details-content">
+
         <div className="details-main">
-          <p className="details-location">{space.location}</p>
+
+          <p className="details-location">
+            {space.location}
+          </p>
 
           <h1>{space.name}</h1>
 
@@ -120,6 +153,7 @@ function WorkspaceDetails({ space, onBack }) {
           <h2>Workspace Overview</h2>
 
           <div className="details-specifications">
+
             <div>
               <span>Capacity</span>
               <strong>{space.capacity}</strong>
@@ -134,20 +168,33 @@ function WorkspaceDetails({ space, onBack }) {
               <span>Workspace Type</span>
               <strong>{space.type}</strong>
             </div>
+
           </div>
 
           <h2>Amenities & Facilities</h2>
 
           <div className="details-amenities">
+
             {space.amenities.map((amenity, index) => (
-              <span key={index}>✓ {amenity}</span>
+              <span key={index}>
+                ✓ {amenity}
+              </span>
             ))}
+
           </div>
+
         </div>
 
+        {/* BOOKING FORM */}
+
         <aside className="booking-card">
+
           {bookingSuccess ? (
+
+            // BOOKING SUCCESS MESSAGE
+
             <div className="booking-success">
+
               <h2>Request Received!</h2>
 
               <p>
@@ -180,15 +227,24 @@ function WorkspaceDetails({ space, onBack }) {
 
               <button
                 className="booking-button"
+                type="button"
                 onClick={handleAnotherRequest}
               >
                 Make Another Request
               </button>
+
             </div>
+
           ) : (
+
+            // BOOKING FORM
+
             <>
+
               <p>Workspace Starting From</p>
+
               <h2>{space.price}</h2>
+
               <span>{space.period}</span>
 
               <h3 className="booking-form-title">
@@ -196,7 +252,9 @@ function WorkspaceDetails({ space, onBack }) {
               </h3>
 
               <form onSubmit={handleBooking}>
+
                 <label>Your Full Name</label>
+
                 <input
                   type="text"
                   name="customerName"
@@ -207,6 +265,7 @@ function WorkspaceDetails({ space, onBack }) {
                 />
 
                 <label>Email Address</label>
+
                 <input
                   type="email"
                   name="email"
@@ -217,6 +276,7 @@ function WorkspaceDetails({ space, onBack }) {
                 />
 
                 <label>Phone Number</label>
+
                 <input
                   type="tel"
                   name="phone"
@@ -229,6 +289,7 @@ function WorkspaceDetails({ space, onBack }) {
                 />
 
                 <label>Booking Date</label>
+
                 <input
                   type="date"
                   name="bookingDate"
@@ -239,6 +300,7 @@ function WorkspaceDetails({ space, onBack }) {
                 />
 
                 <label>Preferred Time</label>
+
                 <input
                   type="time"
                   name="bookingTime"
@@ -248,6 +310,7 @@ function WorkspaceDetails({ space, onBack }) {
                 />
 
                 <label>Number of People</label>
+
                 <input
                   type="number"
                   name="people"
@@ -257,6 +320,8 @@ function WorkspaceDetails({ space, onBack }) {
                   onChange={handleChange}
                   required
                 />
+
+                {/* ERROR MESSAGE */}
 
                 {bookingError && (
                   <p
@@ -270,6 +335,8 @@ function WorkspaceDetails({ space, onBack }) {
                   </p>
                 )}
 
+                {/* SUBMIT BUTTON */}
+
                 <button
                   type="submit"
                   className="booking-button"
@@ -279,19 +346,24 @@ function WorkspaceDetails({ space, onBack }) {
                     ? "Submitting Request..."
                     : "Submit Booking Request"}
                 </button>
+
               </form>
 
               <p className="booking-note">
                 Your request will be subject to workspace
                 availability and owner confirmation.
               </p>
+
             </>
+
           )}
+
         </aside>
+
       </div>
+
     </main>
   );
 }
 
 export default WorkspaceDetails;
-
