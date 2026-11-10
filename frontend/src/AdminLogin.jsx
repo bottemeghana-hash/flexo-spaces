@@ -1,6 +1,7 @@
 
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { API_BASE_URL } from "./api";
 import "./AdminLogin.css";
 
 function AdminLogin() {
@@ -11,22 +12,22 @@ function AdminLogin() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
+  const handleLogin = async (event) => {
+    event.preventDefault();
 
-    setError("");
     setLoading(true);
+    setError("");
 
     try {
       const response = await fetch(
-        "http://127.0.0.1:5000/api/admin/login",
+        `${API_BASE_URL}/api/admin/login`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            email,
+            email: email.trim(),
             password,
           }),
         }
@@ -34,19 +35,28 @@ function AdminLogin() {
 
       const data = await response.json();
 
-      if (!response.ok || !data.success) {
-        throw new Error(data.message || "Login failed.");
+      if (!response.ok || !data.success || !data.token) {
+        throw new Error(
+          data.message || "Invalid email or password."
+        );
       }
 
       localStorage.setItem("flexoAdminToken", data.token);
-      localStorage.setItem("flexoAdminEmail", data.admin.email);
-      localStorage.getItem("flexoAdminToken") ? "TOKEN EXISTS" : "TOKEN MISSING"
 
-      navigate("/admin");
-    } catch (err) {
-      setError(
-        err.message || "Unable to connect to the server."
+      localStorage.setItem(
+        "flexoAdminEmail",
+        data.admin?.email || email
       );
+
+      navigate("/admin", { replace: true });
+
+    } catch (err) {
+      console.error("Admin login error:", err);
+
+      setError(
+        err.message || "Unable to connect to the backend."
+      );
+
     } finally {
       setLoading(false);
     }
@@ -54,12 +64,16 @@ function AdminLogin() {
 
   return (
     <div className="admin-login-page">
+
       <div className="admin-login-card">
+
         <div className="admin-login-brand">
           FLEXO <span>SPACES</span>
         </div>
 
-        <p className="admin-login-label">ADMINISTRATION</p>
+        <p className="admin-login-label">
+          ADMINISTRATION
+        </p>
 
         <h1>Welcome back</h1>
 
@@ -68,41 +82,56 @@ function AdminLogin() {
         </p>
 
         <form onSubmit={handleLogin}>
-          <label htmlFor="admin-email">Email address</label>
+
+          <label htmlFor="admin-email">
+            Email address
+          </label>
 
           <input
             id="admin-email"
             type="email"
             placeholder="Enter admin email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(event) => setEmail(event.target.value)}
             required
           />
 
-          <label htmlFor="admin-password">Password</label>
+          <label htmlFor="admin-password">
+            Password
+          </label>
 
           <input
             id="admin-password"
             type="password"
             placeholder="Enter admin password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(event) => setPassword(event.target.value)}
             required
           />
 
           {error && (
-            <p className="admin-login-error">{error}</p>
+            <p className="admin-login-error" role="alert">
+              {error}
+            </p>
           )}
 
-          <button type="submit" disabled={loading}>
-            {loading ? "Signing in..." : "Sign in to dashboard"}
+          <button
+            type="submit"
+            disabled={loading}
+          >
+            {loading
+              ? "Signing in..."
+              : "Sign in to dashboard"}
           </button>
+
         </form>
 
         <Link to="/" className="admin-login-back">
           ← Back to website
         </Link>
+
       </div>
+
     </div>
   );
 }
