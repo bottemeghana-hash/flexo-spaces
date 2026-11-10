@@ -41,7 +41,10 @@ function AdminLogin() {
         );
       }
 
-      localStorage.setItem("flexoAdminToken", data.token);
+      localStorage.setItem(
+        "flexoAdminToken",
+        data.token
+      );
 
       localStorage.setItem(
         "flexoAdminEmail",
@@ -50,11 +53,11 @@ function AdminLogin() {
 
       navigate("/admin", { replace: true });
 
-    } catch (err) {
-      console.error("Admin login error:", err);
+    } catch (error) {
+      console.error("Admin login error:", error);
 
       setError(
-        err.message || "Unable to connect to the backend."
+        error.message || "Unable to connect to the backend."
       );
 
     } finally {
@@ -64,7 +67,6 @@ function AdminLogin() {
 
   return (
     <div className="admin-login-page">
-
       <div className="admin-login-card">
 
         <div className="admin-login-brand">
@@ -115,10 +117,7 @@ function AdminLogin() {
             </p>
           )}
 
-          <button
-            type="submit"
-            disabled={loading}
-          >
+          <button type="submit" disabled={loading}>
             {loading
               ? "Signing in..."
               : "Sign in to dashboard"}
@@ -131,7 +130,6 @@ function AdminLogin() {
         </Link>
 
       </div>
-
     </div>
   );
 }
