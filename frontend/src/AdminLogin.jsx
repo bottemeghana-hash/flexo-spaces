@@ -45,9 +45,10 @@ function AdminLogin() {
       );
 
       navigate("/admin", { replace: true });
+
     } catch (err) {
-      console.error("Login error:", err);
-      setError(err.message || "Unable to connect to server.");
+      console.error("Admin login error:", err);
+      setError(err.message || "Unable to connect to the server.");
     } finally {
       setLoading(false);
     }
@@ -56,6 +57,7 @@ function AdminLogin() {
   return (
     <div className="admin-login-page">
       <div className="admin-login-card">
+
         <div className="admin-login-brand">
           FLEXO <span>SPACES</span>
         </div>
@@ -70,6 +72,7 @@ function AdminLogin() {
 
         <form onSubmit={handleLogin}>
           <label htmlFor="admin-email">Email address</label>
+
           <input
             id="admin-email"
             type="email"
@@ -80,6 +83,7 @@ function AdminLogin() {
           />
 
           <label htmlFor="admin-password">Password</label>
+
           <input
             id="admin-password"
             type="password"
@@ -103,6 +107,7 @@ function AdminLogin() {
         <Link to="/" className="admin-login-back">
           ← Back to website
         </Link>
+
       </div>
     </div>
   );
