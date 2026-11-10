@@ -14,7 +14,6 @@ function AdminLogin() {
 
   const handleLogin = async (event) => {
     event.preventDefault();
-
     setLoading(true);
     setError("");
 
@@ -36,9 +35,7 @@ function AdminLogin() {
       const data = await response.json();
 
       if (!response.ok || !data.success || !data.token) {
-        throw new Error(
-          data.message || "Invalid email or password."
-        );
+        throw new Error(data.message || "Login failed.");
       }
 
       localStorage.setItem("flexoAdminToken", data.token);
@@ -48,13 +45,9 @@ function AdminLogin() {
       );
 
       navigate("/admin", { replace: true });
-
     } catch (err) {
-      console.error("Admin login error:", err);
-
-      setError(
-        err.message || "Unable to connect to the backend."
-      );
+      console.error("Login error:", err);
+      setError(err.message || "Unable to connect to server.");
     } finally {
       setLoading(false);
     }
@@ -63,14 +56,11 @@ function AdminLogin() {
   return (
     <div className="admin-login-page">
       <div className="admin-login-card">
-
         <div className="admin-login-brand">
           FLEXO <span>SPACES</span>
         </div>
 
-        <p className="admin-login-label">
-          ADMINISTRATION
-        </p>
+        <p className="admin-login-label">ADMINISTRATION</p>
 
         <h1>Welcome back</h1>
 
@@ -79,10 +69,7 @@ function AdminLogin() {
         </p>
 
         <form onSubmit={handleLogin}>
-          <label htmlFor="admin-email">
-            Email address
-          </label>
-
+          <label htmlFor="admin-email">Email address</label>
           <input
             id="admin-email"
             type="email"
@@ -92,10 +79,7 @@ function AdminLogin() {
             required
           />
 
-          <label htmlFor="admin-password">
-            Password
-          </label>
-
+          <label htmlFor="admin-password">Password</label>
           <input
             id="admin-password"
             type="password"
@@ -119,7 +103,6 @@ function AdminLogin() {
         <Link to="/" className="admin-login-back">
           ← Back to website
         </Link>
-
       </div>
     </div>
   );
