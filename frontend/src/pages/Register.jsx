@@ -1,10 +1,14 @@
 
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { API_BASE_URL } from "../api";
 import "./Register.css";
 
 function Register() {
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -20,17 +24,69 @@ function Register() {
       ...formData,
       [e.target.name]: e.target.value,
     });
+
+    setError("");
+    setSuccess("");
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
+    setError("");
+    setSuccess("");
+
     if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match!");
+      setError("Passwords do not match!");
       return;
     }
 
-    alert("Registration interface is working! Backend registration will be connected later.");
+    if (formData.password.length < 8) {
+      setError("Password must contain at least 8 characters.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          fullName: formData.fullName.trim(),
+          email: formData.email.trim().toLowerCase(),
+          phone: formData.phone,
+          role: formData.role,
+          password: formData.password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Registration failed.");
+      }
+
+      setSuccess(
+        "Your Flexo Spaces account has been created successfully! Please sign in."
+      );
+
+      setFormData({
+        fullName: "",
+        email: "",
+        phone: "",
+        role: "User",
+        password: "",
+        confirmPassword: "",
+      });
+    } catch (err) {
+      setError(
+        err.message || "Unable to connect to the server. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -60,6 +116,18 @@ function Register() {
           <p className="register-subtitle">
             Fill in your details to get started.
           </p>
+
+          {error && (
+            <p role="alert" style={{ color: "#d93025", marginBottom: "12px" }}>
+              {error}
+            </p>
+          )}
+
+          {success && (
+            <p role="status" style={{ color: "#188038", marginBottom: "12px" }}>
+              {success} <Link to="/login">Sign in here</Link>.
+            </p>
+          )}
 
           <form onSubmit={handleSubmit}>
             <label>Full Name</label>
@@ -115,6 +183,7 @@ function Register() {
                 onChange={handleChange}
                 required
               />
+
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
@@ -134,8 +203,12 @@ function Register() {
               required
             />
 
-            <button type="submit" className="register-submit">
-              CREATE ACCOUNT
+            <button
+              type="submit"
+              className="register-submit"
+              disabled={loading}
+            >
+              {loading ? "CREATING ACCOUNT..." : "CREATE ACCOUNT"}
             </button>
           </form>
 
@@ -145,14 +218,10 @@ function Register() {
           </p>
 
           <Link to="/" className="register-home-link">
-            ← Back to homepage
+            Back to Home
           </Link>
         </div>
       </section>
-
-      <footer className="register-footer">
-        © 2026 FLEXO SPACES. ALL RIGHTS RESERVED.
-      </footer>
     </main>
   );
 }

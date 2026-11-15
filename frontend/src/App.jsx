@@ -1,11 +1,15 @@
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Routes,
   Route,
   Link,
   Navigate,
+  useNavigate,
 } from "react-router-dom";
+
+import "./App.css";
+import { API_BASE_URL } from "./api";
 
 import Login from "./pages/login";
 import Register from "./pages/Register";
@@ -14,175 +18,248 @@ import UserDashboard from "./UserDashboard";
 import AdminDashboard from "./AdminDashboard";
 import AdminLogin from "./AdminLogin";
 
-import "./App.css";
-
-// ======================================
-// WORKSPACE DATA
-// ======================================
-
-const spaces = [
-  {
-    id: 1,
-    name: "The Executive Suite",
-    location: "Hitech City, Hyderabad",
-    type: "PRIVATE OFFICE",
-    price: "₹85,000",
-    period: "/ month",
-    amount: 85000,
-    capacity: "10–15 People",
-    area: "1,200 sq.ft.",
-    image: "https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=900",
-    amenities: ["Private Office", "Premium Wi-Fi", "Valet Parking"],
-  },
-  {
-    id: 2,
-    name: "The Creative Hub",
-    location: "Jubilee Hills, Hyderabad",
-    type: "SHARED WORKSPACE",
-    price: "₹18,000",
-    period: "/ month",
-    amount: 18000,
-    capacity: "1–4 People",
-    area: "Shared Desk",
-    image: "https://images.unsplash.com/photo-1497366811353-6870744d04b2?w=900",
-    amenities: ["Designer Interiors", "Cafeteria", "Power Backup"],
-  },
-  {
-    id: 3,
-    name: "The Grand Boardroom",
-    location: "Gachibowli, Hyderabad",
-    type: "MEETING ROOM",
-    price: "₹3,500",
-    period: "/ hour",
-    amount: 3500,
-    capacity: "12–20 People",
-    area: "650 sq.ft.",
-    image: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=900",
-    amenities: ["Executive Seating", "Projector", "Video Conferencing"],
-  },
-  {
-    id: 4,
-    name: "The Platinum Offices",
-    location: "Financial District, Hyderabad",
-    type: "PRIVATE OFFICE",
-    price: "₹75,000",
-    period: "/ month",
-    amount: 75000,
-    capacity: "8–12 People",
-    area: "1,000 sq.ft.",
-    image: "https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=900",
-    amenities: ["Dedicated Team Space", "Reception", "24/7 Security"],
-  },
-  {
-    id: 5,
-    name: "The Imperial Workspace",
-    location: "Banjara Hills, Hyderabad",
-    type: "PRIVATE OFFICE",
-    price: "₹65,000",
-    period: "/ month",
-    amount: 65000,
-    capacity: "6–10 People",
-    area: "900 sq.ft.",
-    image: "https://images.unsplash.com/photo-1497366811353-6870744d04b2?w=900",
-    amenities: ["Luxury Interiors", "Private Cabins", "Executive Lounge"],
-  },
-  {
-    id: 6,
-    name: "The Urban Collective",
-    location: "Madhapur, Hyderabad",
-    type: "SHARED WORKSPACE",
-    price: "₹15,000",
-    period: "/ month",
-    amount: 15000,
-    capacity: "1–3 People",
-    area: "Shared Desk",
-    image: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=900",
-    amenities: ["Flexible Seating", "High-speed Wi-Fi", "Cafeteria"],
-  },
-  {
-    id: 7,
-    name: "The CEO's Private Cabin",
-    location: "Kondapur, Hyderabad",
-    type: "PRIVATE OFFICE",
-    price: "₹45,000",
-    period: "/ month",
-    amount: 45000,
-    capacity: "3–6 People",
-    area: "550 sq.ft.",
-    image: "https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=900",
-    amenities: ["Executive Cabin", "Premium Furniture", "Parking"],
-  },
-  {
-    id: 8,
-    name: "The Signature Meeting Lounge",
-    location: "Hitech City, Hyderabad",
-    type: "MEETING ROOM",
-    price: "₹2,500",
-    period: "/ hour",
-    amount: 2500,
-    capacity: "8–12 People",
-    area: "450 sq.ft.",
-    image: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=900",
-    amenities: ["Smart Display", "Conference Table", "Air Conditioning"],
-  },
-  {
-    id: 9,
-    name: "The Elite Business Club",
-    location: "Jubilee Hills, Hyderabad",
-    type: "SHARED WORKSPACE",
-    price: "₹25,000",
-    period: "/ month",
-    amount: 25000,
-    capacity: "1–5 People",
-    area: "Premium Shared Desk",
-    image: "https://images.unsplash.com/photo-1497366811353-6870744d04b2?w=900",
-    amenities: ["Premium Lounge", "Networking Area", "Cafeteria"],
-  },
-];
-
-// ======================================
-// HOMEPAGE COMPONENT
-// ======================================
+// ==========================================
+// HOME PAGE
+// ==========================================
 
 function Home() {
+  const navigate = useNavigate();
+
+  // Search filters
   const [location, setLocation] = useState("");
   const [workspaceType, setWorkspaceType] = useState("");
   const [budget, setBudget] = useState("");
   const [searchApplied, setSearchApplied] = useState(false);
+
+  // Workspaces from MongoDB
+  const [spaces, setSpaces] = useState([]);
+  const [spacesLoading, setSpacesLoading] = useState(true);
+  const [spacesError, setSpacesError] = useState("");
+
+  // Selected workspace
   const [selectedSpace, setSelectedSpace] = useState(null);
 
+  // Favourites
+  const [favouriteIds, setFavouriteIds] = useState([]);
+  const [favouriteLoading, setFavouriteLoading] = useState(true);
+
+  // ==========================================
+  // FETCH WORKSPACES FROM MONGODB
+  // ==========================================
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchWorkspaces = async () => {
+      try {
+        setSpacesLoading(true);
+        setSpacesError("");
+
+        const response = await fetch(
+          `${API_BASE_URL}/api/workspaces`
+        );
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          throw new Error(
+            data.message || "Unable to load workspaces."
+          );
+        }
+
+        const formattedWorkspaces = data.workspaces.map(
+          (workspace) => ({
+            ...workspace,
+            id: String(workspace.workspaceId),
+            amenities: Array.isArray(workspace.amenities)
+              ? workspace.amenities
+              : [],
+          })
+        );
+
+        if (isMounted) {
+          setSpaces(formattedWorkspaces);
+        }
+      } catch (error) {
+        console.error("Workspace loading error:", error);
+
+        if (isMounted) {
+          setSpacesError(error.message);
+        }
+      } finally {
+        if (isMounted) {
+          setSpacesLoading(false);
+        }
+      }
+    };
+
+    fetchWorkspaces();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // ==========================================
+  // FETCH USER FAVOURITES
+  // ==========================================
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchFavourites = async () => {
+      const token = localStorage.getItem("flexoUserToken");
+
+      if (!token) {
+        if (isMounted) {
+          setFavouriteLoading(false);
+        }
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `${API_BASE_URL}/api/favourites`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const data = await response.json();
+
+        if (response.ok && data.success && isMounted) {
+          setFavouriteIds(
+            data.favourites.map((item) =>
+              String(item.workspaceId)
+            )
+          );
+        }
+      } catch (error) {
+        console.error(
+          "Unable to load favourites:",
+          error
+        );
+      } finally {
+        if (isMounted) {
+          setFavouriteLoading(false);
+        }
+      }
+    };
+
+    fetchFavourites();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // ==========================================
+  // ADD OR REMOVE FAVOURITES
+  // ==========================================
+
+  const handleFavourite = async (space) => {
+    const token = localStorage.getItem("flexoUserToken");
+
+    if (!token) {
+      alert("Please log in to save your favourite workspaces.");
+      navigate("/login");
+      return;
+    }
+
+    const workspaceId = String(space.id);
+    const isFavourite = favouriteIds.includes(workspaceId);
+
+    try {
+      const response = await fetch(
+        isFavourite
+          ? `${API_BASE_URL}/api/favourites/${workspaceId}`
+          : `${API_BASE_URL}/api/favourites`,
+        {
+          method: isFavourite ? "DELETE" : "POST",
+
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+
+          ...(isFavourite
+            ? {}
+            : {
+                body: JSON.stringify({
+                  workspaceId,
+                  name: space.name,
+                  location: space.location,
+                  type: space.type,
+                  price: space.price,
+                  period: space.period,
+                  image: space.image,
+                  capacity: space.capacity,
+                  area: space.area,
+                  amenities: space.amenities,
+                }),
+              }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message || "Unable to update favourites."
+        );
+      }
+
+      setFavouriteIds((previous) =>
+        isFavourite
+          ? previous.filter((id) => id !== workspaceId)
+          : [...previous, workspaceId]
+      );
+
+      alert(
+        isFavourite
+          ? "Workspace removed from favourites."
+          : "Workspace added to favourites!"
+      );
+    } catch (error) {
+      console.error("Favourite error:", error);
+      alert(error.message);
+    }
+  };
+
+  // ==========================================
   // FILTER WORKSPACES
+  // ==========================================
 
   const filteredSpaces = spaces.filter((space) => {
     const matchesLocation =
-      !location.trim() ||
-      space.location.toLowerCase().includes(location.trim().toLowerCase());
+      !location ||
+      space.location
+        .toLowerCase()
+        .includes(location.toLowerCase());
 
     const matchesType =
       !workspaceType || space.type === workspaceType;
 
     const matchesBudget =
-      !budget ||
-      (budget === "15000" && space.amount <= 15000) ||
-      (budget === "40000" &&
-        space.amount > 15000 &&
-        space.amount <= 40000) ||
-      (budget === "above40000" && space.amount > 40000);
+      !budget || Number(space.amount) <= Number(budget);
 
-    return matchesLocation && matchesType && matchesBudget;
+    return (
+      matchesLocation &&
+      matchesType &&
+      matchesBudget
+    );
   });
 
-  // SEARCH WORKSPACES
+  // ==========================================
+  // SEARCH FUNCTIONS
+  // ==========================================
 
-  const handleSearch = () => {
+  const handleSearch = (event) => {
+    event.preventDefault();
     setSearchApplied(true);
-
-    document.getElementById("spaces")?.scrollIntoView({
-      behavior: "smooth",
-    });
   };
-
-  // CLEAR FILTERS
 
   const clearFilters = () => {
     setLocation("");
@@ -191,7 +268,9 @@ function Home() {
     setSearchApplied(false);
   };
 
+  // ==========================================
   // WORKSPACE DETAILS
+  // ==========================================
 
   if (selectedSpace) {
     return (
@@ -202,253 +281,299 @@ function Home() {
     );
   }
 
-  return (
-    <div className="website">
+  // ==========================================
+  // HOMEPAGE UI
+  // ==========================================
 
-      {/* NAVIGATION */}
+  return (
+    <div className="app">
+
+      {/* NAVBAR */}
 
       <nav className="navbar">
-
-        <a className="logo" href="#home">
-          FLEXO<span>SPACES.</span>
-        </a>
+        <Link to="/" className="logo">
+          FLEXO<span>SPACES</span>
+        </Link>
 
         <div className="nav-links">
-          <a href="#home">Home</a>
-          <a href="#spaces">Explore Spaces</a>
-          <a href="#about">About Us</a>
-          <a href="#contact">Contact</a>
-        </div>
+          <Link to="/">Home</Link>
+          <a href="#workspaces">Workspaces</a>
+          <Link to="/register">List Your Space</Link>
+          <Link to="/dashboard">Dashboard</Link>
+          <Link to="/admin">Admin Dashboard</Link>
 
-        <div
-          className="nav-actions"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "10px",
-            flexWrap: "wrap",
-          }}
-        >
-
-          <Link to="/login" className="login-btn">
+          <Link to="/login" className="login-button">
             Log In
           </Link>
-
-          <Link to="/dashboard" className="login-btn">
-            Dashboard
-          </Link>
-
-          <Link to="/register" className="nav-cta">
-            List Your Space ↗
-          </Link>
-
-          {/* ADMIN DASHBOARD BUTTON */}
-
-          <Link
-            to="/admin-login"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: "11px 17px",
-              backgroundColor: "#C5A15A",
-              color: "#191918",
-              border: "1px solid #C5A15A",
-              borderRadius: "6px",
-              textDecoration: "none",
-              fontWeight: "700",
-              fontSize: "13px",
-              whiteSpace: "nowrap",
-              cursor: "pointer",
-              transition: "all 0.3s ease",
-            }}
-          >
-            Admin Dashboard ↗
-          </Link>
-
         </div>
-
       </nav>
 
-      <main>
+      {/* HERO SECTION */}
 
-        {/* HERO SECTION */}
+      <section className="hero">
+        <div className="hero-content">
 
-        <section className="hero" id="home">
+          <p className="hero-label">
+            WORKSPACE, REIMAGINED
+          </p>
 
-          <div className="hero-content">
+          <h1>
+            Find a Space
+            <br />
+            That Inspires <span>Greatness.</span>
+          </h1>
 
-            <p className="eyebrow">
-              WORK BETTER. LIVE INSPIRED.
+          <p className="hero-description">
+            Discover premium workspaces designed for ambitious
+            professionals, growing teams and modern businesses.
+          </p>
+
+          <a href="#workspaces" className="hero-button">
+            Explore Workspaces
+          </a>
+
+        </div>
+      </section>
+
+      {/* SEARCH SECTION */}
+
+      <section className="search-section">
+        <form
+          className="search-form"
+          onSubmit={handleSearch}
+        >
+
+          <div className="search-field">
+            <label htmlFor="location">Location</label>
+
+            <select
+              id="location"
+              value={location}
+              onChange={(event) =>
+                setLocation(event.target.value)
+              }
+            >
+              <option value="">All Locations</option>
+              <option value="Hitech City">Hitech City</option>
+              <option value="Jubilee Hills">Jubilee Hills</option>
+              <option value="Gachibowli">Gachibowli</option>
+              <option value="Financial District">
+                Financial District
+              </option>
+              <option value="Banjara Hills">Banjara Hills</option>
+              <option value="Madhapur">Madhapur</option>
+              <option value="Kondapur">Kondapur</option>
+            </select>
+          </div>
+
+          <div className="search-field">
+            <label htmlFor="workspaceType">
+              Workspace Type
+            </label>
+
+            <select
+              id="workspaceType"
+              value={workspaceType}
+              onChange={(event) =>
+                setWorkspaceType(event.target.value)
+              }
+            >
+              <option value="">All Types</option>
+              <option value="PRIVATE OFFICE">
+                Private Office
+              </option>
+              <option value="SHARED WORKSPACE">
+                Shared Workspace
+              </option>
+              <option value="MEETING ROOM">
+                Meeting Room
+              </option>
+            </select>
+          </div>
+
+          <div className="search-field">
+            <label htmlFor="budget">Maximum Budget</label>
+
+            <select
+              id="budget"
+              value={budget}
+              onChange={(event) =>
+                setBudget(event.target.value)
+              }
+            >
+              <option value="">Any Budget</option>
+              <option value="10000">Up to ₹10,000</option>
+              <option value="20000">Up to ₹20,000</option>
+              <option value="30000">Up to ₹30,000</option>
+              <option value="50000">Up to ₹50,000</option>
+              <option value="75000">Up to ₹75,000</option>
+              <option value="100000">Up to ₹1,00,000</option>
+            </select>
+          </div>
+
+          <button
+            type="submit"
+            className="search-button"
+          >
+            Search Spaces
+          </button>
+
+        </form>
+      </section>
+
+      {/* WORKSPACES SECTION */}
+
+      <section
+        className="workspaces-section"
+        id="workspaces"
+      >
+
+        <div className="section-heading">
+          <div>
+            <p className="section-label">
+              OUR COLLECTION
             </p>
 
-            <h1>
-              A space to
-              <br />
-              <span>do great things.</span>
-            </h1>
+            <h2>Explore Premium Workspaces</h2>
 
-            <p className="hero-description">
-              Discover exceptional workspaces designed for ambitious
-              people, growing teams and brilliant ideas.
+            <p>
+              Thoughtfully designed spaces for your next big idea.
+            </p>
+          </div>
+        </div>
+
+        {/* SEARCH RESULTS */}
+
+        {searchApplied && !spacesLoading && !spacesError && (
+          <div className="search-results">
+            <p>
+              Showing{" "}
+              <strong>{filteredSpaces.length}</strong>{" "}
+              workspace(s) matching your search.
             </p>
 
-            <div className="hero-buttons">
-
-              <a href="#spaces" className="gold-btn">
-                Explore Workspaces ↗
-              </a>
-
-              <a href="#about" className="text-btn">
-                Discover Flexo
-              </a>
-
-            </div>
-
-            <div className="hero-stats">
-
-              <div>
-                <strong>01</strong>
-                <span>Find your space</span>
-              </div>
-
-              <div>
-                <strong>02</strong>
-                <span>Book with ease</span>
-              </div>
-
-              <div>
-                <strong>03</strong>
-                <span>Get to work</span>
-              </div>
-
-            </div>
-
-          </div>
-
-          <div className="hero-image">
-
-            <img
-              src="https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=1400"
-              alt="Premium modern coworking office"
-            />
-
-            <div className="image-label">
-              <span>YOUR NEXT CHAPTER</span>
-              <strong>Starts here.</strong>
-            </div>
-
-          </div>
-
-        </section>
-
-        {/* SEARCH SECTION */}
-
-        <section className="search-section">
-
-          <div className="search-heading">
-            <span>FIND YOUR PERFECT SPACE</span>
-            <h2>Where will you work today?</h2>
-          </div>
-
-          <div className="search-box">
-
-            <label>
-              LOCATION
-
-              <input
-                type="text"
-                placeholder="e.g. Hitech City"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-              />
-            </label>
-
-            <label>
-              WORKSPACE TYPE
-
-              <select
-                value={workspaceType}
-                onChange={(e) => setWorkspaceType(e.target.value)}
-              >
-                <option value="">All workspace types</option>
-                <option value="PRIVATE OFFICE">Private Office</option>
-                <option value="SHARED WORKSPACE">Shared Workspace</option>
-                <option value="MEETING ROOM">Meeting Room</option>
-              </select>
-            </label>
-
-            <label>
-              YOUR BUDGET
-
-              <select
-                value={budget}
-                onChange={(e) => setBudget(e.target.value)}
-              >
-                <option value="">Any budget</option>
-                <option value="15000">Up to ₹15,000</option>
-                <option value="40000">₹15,001 – ₹40,000</option>
-                <option value="above40000">Above ₹40,000</option>
-              </select>
-            </label>
-
-            <button className="search-btn" onClick={handleSearch}>
-              Search Spaces ↗
+            <button
+              type="button"
+              className="clear-filters"
+              onClick={clearFilters}
+            >
+              Clear filters ✕
             </button>
+          </div>
+        )}
 
+        {/* LOADING */}
+
+        {spacesLoading ? (
+          <div className="no-results">
+            <h3>Loading Workspaces...</h3>
+            <p>Please wait while we fetch workspaces.</p>
           </div>
 
-        </section>
+        ) : spacesError ? (
+          <div className="no-results">
+            <h3>Unable to Load Workspaces</h3>
+            <p>{spacesError}</p>
 
-        {/* WORKSPACE LISTINGS */}
-
-        <section className="spaces-section" id="spaces">
-
-          <div className="section-heading">
-
-            <div>
-              <p className="eyebrow">CURATED FOR YOUR AMBITION</p>
-              <h2>Exceptional spaces.</h2>
-            </div>
-
-            <a href="#spaces" className="view-all">
-              Explore all spaces ↗
-            </a>
-
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+            >
+              Try Again
+            </button>
           </div>
 
-          {searchApplied && (
-            <div className="search-results">
+        ) : filteredSpaces.length === 0 ? (
+          <div className="no-results">
+            <h3>No workspaces found</h3>
+            <p>
+              Try changing your location, type or budget.
+            </p>
 
-              <p>
-                <strong>{filteredSpaces.length}</strong> workspace(s) found
-              </p>
+            <button
+              type="button"
+              onClick={clearFilters}
+            >
+              Clear Filters
+            </button>
+          </div>
 
-              <button className="clear-filters" onClick={clearFilters}>
-                Clear filters ✕
-              </button>
+        ) : (
 
-            </div>
-          )}
+          /* WORKSPACE CARDS */
 
-          <div className="space-grid">
+          <div className="spaces-grid">
 
-            {filteredSpaces.length > 0 ? (
+            {filteredSpaces.map((space) => {
+              const isFavourite = favouriteIds.includes(
+                String(space.id)
+              );
 
-              filteredSpaces.map((space) => (
+              return (
+                <article
+                  className="space-card"
+                  key={space.id}
+                >
 
-                <article className="space-card" key={space.id}>
+                  <div
+                    className="space-image"
+                    style={{ position: "relative" }}
+                  >
 
-                  <div className="space-image">
-
-                    <img src={space.image} alt={space.name} />
+                    <img
+                      src={space.image}
+                      alt={space.name}
+                    />
 
                     <span className="space-type">
                       {space.type}
                     </span>
 
+                    {/* FAVOURITE BUTTON */}
+
+                    <button
+                      type="button"
+                      onClick={() => handleFavourite(space)}
+                      disabled={favouriteLoading}
+                      aria-label={
+                        isFavourite
+                          ? "Remove from favourites"
+                          : "Add to favourites"
+                      }
+                      title={
+                        isFavourite
+                          ? "Remove from favourites"
+                          : "Save to favourites"
+                      }
+                      style={{
+                        position: "absolute",
+                        top: "15px",
+                        right: "15px",
+                        width: "42px",
+                        height: "42px",
+                        borderRadius: "50%",
+                        border: "none",
+                        background: "#ffffff",
+                        color: isFavourite
+                          ? "#e63946"
+                          : "#333333",
+                        fontSize: "23px",
+                        cursor: favouriteLoading
+                          ? "wait"
+                          : "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        boxShadow:
+                          "0 2px 10px rgba(0,0,0,0.15)",
+                      }}
+                    >
+                      {isFavourite ? "♥" : "♡"}
+                    </button>
+
                   </div>
+
+                  {/* WORKSPACE INFORMATION */}
 
                   <div className="space-details">
 
@@ -459,138 +584,188 @@ function Home() {
                     <h3>{space.name}</h3>
 
                     <div className="space-info">
-                      <span>♙ {space.capacity}</span>
-                      <span>▧ {space.area}</span>
+                      <span>
+                        ♙ {space.capacity}
+                      </span>
+
+                      <span>
+                        ▧ {space.area}
+                      </span>
                     </div>
+
+                    {/* AMENITIES */}
 
                     <div className="amenities">
                       {space.amenities.map((item) => (
-                        <span key={item}>{item}</span>
+                        <span key={item}>
+                          {item}
+                        </span>
                       ))}
                     </div>
 
-                    <div className="space-footer">
+                    {/* PRICE AND DETAILS */}
 
+                    <div className="space-footer">
                       <p>
                         <strong>{space.price}</strong>
                         <span> {space.period}</span>
                       </p>
 
                       <button
+                        type="button"
                         aria-label={`View ${space.name}`}
                         title="View workspace details"
-                        onClick={() => setSelectedSpace(space)}
+                        onClick={() =>
+                          setSelectedSpace(space)
+                        }
                       >
-                        ↗
+                        →
                       </button>
-
                     </div>
 
                   </div>
 
                 </article>
-
-              ))
-
-            ) : (
-
-              <div className="no-results">
-
-                <h3>No workspaces found</h3>
-
-                <p>
-                  Try another location, workspace type or budget.
-                </p>
-
-                <button className="gold-btn" onClick={clearFilters}>
-                  Show all workspaces
-                </button>
-
-              </div>
-
-            )}
+              );
+            })}
 
           </div>
+        )}
 
-        </section>
+      </section>
 
-        {/* ABOUT SECTION */}
+      {/* WHY FLEXO SECTION */}
 
-        <section className="about-section" id="about">
+      <section className="why-flexo">
 
-          <p className="eyebrow">MORE THAN JUST A DESK</p>
-
-          <h2>
-            Great work begins
-            <br />
-            with the <span>right space.</span>
-          </h2>
-
-          <p>
-            From focused individual work to ambitious team meetings,
-            discover an environment that helps you do your best work.
+        <div className="section-heading">
+          <p className="section-label">
+            THE FLEXO ADVANTAGE
           </p>
 
-          <a href="#spaces" className="gold-btn">
-            Find your workspace ↗
-          </a>
+          <h2>A Better Way to Work</h2>
+        </div>
 
-        </section>
+        <div className="features-grid">
 
-        {/* FOOTER */}
+          <div className="feature-card">
+            <h3>Premium Spaces</h3>
 
-        <footer id="contact">
+            <p>
+              Discover carefully selected workspaces with
+              professional interiors and modern facilities.
+            </p>
+          </div>
 
-          <a className="logo footer-logo" href="#home">
-            FLEXO<span>SPACES.</span>
-          </a>
+          <div className="feature-card">
+            <h3>Flexible Choices</h3>
 
-          <p>Find your space. Focus on your future.</p>
+            <p>
+              Find private offices, shared workspaces and
+              meeting rooms that suit your needs.
+            </p>
+          </div>
 
-          <span>© 2026 Flexo Spaces. All rights reserved.</span>
+          <div className="feature-card">
+            <h3>Simple Booking</h3>
 
-        </footer>
+            <p>
+              Explore workspace details and manage your bookings
+              from your personal dashboard.
+            </p>
+          </div>
 
-      </main>
+        </div>
+
+      </section>
+
+      {/* FOOTER */}
+
+      <footer className="footer">
+
+        <div className="footer-content">
+
+          <Link to="/" className="logo">
+            FLEXO<span>SPACES</span>
+          </Link>
+
+          <p>
+            Premium workspaces. Better ideas. Bigger possibilities.
+          </p>
+
+          <div className="footer-links">
+            <Link to="/">Home</Link>
+            <Link to="/login">Log In</Link>
+            <Link to="/register">Register</Link>
+            <Link to="/dashboard">Dashboard</Link>
+          </div>
+
+        </div>
+
+        <p className="copyright">
+          © {new Date().getFullYear()} Flexo Spaces. All rights
+          reserved.
+        </p>
+
+      </footer>
 
     </div>
   );
 }
 
-// ======================================
-// APPLICATION ROUTES
-// ======================================
+// ==========================================
+// MAIN APP
+// ==========================================
 
 function App() {
+  const adminToken = localStorage.getItem("flexoAdminToken");
+
   return (
     <Routes>
 
-      <Route path="/" element={<Home />} />
+      <Route
+        path="/"
+        element={<Home />}
+      />
 
-      <Route path="/login" element={<Login />} />
+      <Route
+        path="/login"
+        element={<Login />}
+      />
 
-      <Route path="/register" element={<Register />} />
+      <Route
+        path="/register"
+        element={<Register />}
+      />
 
-      <Route path="/dashboard" element={<UserDashboard />} />
+      <Route
+        path="/dashboard"
+        element={<UserDashboard />}
+      />
 
-      <Route path="/admin-login" element={<AdminLogin />} />
-
-      {/* PROTECTED ADMIN ROUTE */}
+      <Route
+        path="/admin-login"
+        element={<AdminLogin />}
+      />
 
       <Route
         path="/admin"
         element={
-          localStorage.getItem("flexoAdminToken") ? (
-            <AdminDashboard />
-          ) : (
-            <Navigate to="/admin-login" replace />
-          )
+          adminToken
+            ? <AdminDashboard />
+            : <Navigate to="/admin-login" replace />
         }
       />
 
-      {/* REDIRECT UNKNOWN ROUTES TO HOMEPAGE */}
+      <Route
+        path="/admin-dashboard"
+        element={<Navigate to="/admin" replace />}
+      />
 
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route
+        path="*"
+        element={<Navigate to="/" replace />}
+      />
 
     </Routes>
   );
